@@ -3,6 +3,8 @@ import aiohttp
 import socket
 import time
 
+from bs4 import BeautifulSoup
+
 class Crawl:
     def __init__(self, loop, num_workers):
         self.q = asyncio.Queue()
@@ -13,10 +15,10 @@ class Crawl:
         self.end_time = None
 
         self.q.put_nowait('http://leokhachatorians.com')
-        self.q.put_nowait('http://google.com')
-        self.q.put_nowait('http://amazon.com')
-        self.q.put_nowait('http://yahoo.com')
-        self.q.put_nowait('http://facebook.com')
+        #self.q.put_nowait('http://google.com')
+        #self.q.put_nowait('http://amazon.com')
+        #self.q.put_nowait('http://yahoo.com')
+        #self.q.put_nowait('http://facebook.com')
 
     async def fetch(self, url):
         resp = await self.client.get(url)
@@ -29,7 +31,9 @@ class Crawl:
             while True:
                 url = await self.q.get()
                 html = await self.fetch(url)
-                print(url)
+                soup = BeautifulSoup(html)
+                for link in soup.find_all('a', href=True):
+                    print(link)
                 self.q.task_done()
         except asyncio.CancelledError:
             pass
