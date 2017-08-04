@@ -3,7 +3,7 @@ import aiohttp
 import time
 
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 class Crawl:
     def __init__(self, loop, num_workers):
@@ -36,14 +36,15 @@ class Crawl:
                 href = link.attrs['href']
                 parsed = urlparse(href)
                 if parsed.scheme == '':
+                    print(urljoin(url, href))
                     href = 'http://leokhachatorians.com' + href
                     parsed = urlparse(href)
                 if parsed.netloc != self.netloc:
-                    should_i_crawl = False
+                    pass
+                    #should_i_crawl = False
                 if parsed.path not in self.seen and should_i_crawl:
                     self.seen.append(parsed.path)
                     self.q.put_nowait(href)
-                    print(href)
         except Exception as e:
             pass
         finally:
