@@ -15,6 +15,9 @@ class Crawl:
         self.end_time = None
         self.seen = []
         self.max_redirects = 10
+        self.base_url = 'http://leokhachatorians.com'
+        self.parsed_based_url = urlparse(self.base_url)
+        self.netloc = self.parsed_based_url.netloc
 
         self.q.put_nowait('http://leokhachatorians.com')
         #self.q.put_nowait('http://google.com')
@@ -29,19 +32,21 @@ class Crawl:
             html =  await resp.text()
             soup = BeautifulSoup(html, 'lxml')
             for link in soup.find_all('a', href=True):
+                should_i_crawl = True
                 href = link.attrs['href']
-                o = urlparse(href)
-                if o.scheme == '':
-                    href = url + link.attrs['href']
-                    if o.path != '/' and o.path not in self.seen:
-                        self.seen.append(o.path)
-                        self.q.put_nowait(href)
-                else:
-                    print(href)
+                parsed = urlparse(href)
+                if parsed.scheme == '':
+                    href = 'http://leokhachatorians.com' + href
+                    parsed = urlparse(href)
+                if parsed.netloc != self.netloc:
+                    should_i_crawl = False
+                if parsed.path not in self.seen and should_i_crawl:
+                    self.seen.append(parsed.path)
                     self.q.put_nowait(href)
-
-            await resp.release()
+                    print(href)
         except Exception:
+            pass
+        finally:
             await resp.release()
 
     async def work(self):
