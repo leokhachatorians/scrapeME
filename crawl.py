@@ -13,6 +13,7 @@ class Crawl:
         self.num_workers = num_workers
         self.start_time = None
         self.end_time = None
+        self.seen = []
 
         self.q.put_nowait('http://leokhachatorians.com')
         #self.q.put_nowait('http://google.com')
@@ -22,18 +23,27 @@ class Crawl:
 
     async def fetch(self, url):
         resp = await self.client.get(url)
-        assert resp.status == 200
-        return await resp.text()
-        await resp.release()
+        try:
+            resp.status == 200
+            html =  await resp.text()
+            soup = BeautifulSoup(html, 'lxml')
+            for link in soup.find_all('a', href=True):
+                href = link.attrs['href']
+                print(href)
+                if href != '/' and href not in self.seen:
+                    href = url + link.attrs['href']
+                    print(href)
+                    self.seen.append(href)
+                    self.q.put_nowait(href)
+            await resp.release()
+        except Exception:
+            resp.release()
 
     async def work(self):
         try:
             while True:
                 url = await self.q.get()
-                html = await self.fetch(url)
-                soup = BeautifulSoup(html)
-                for link in soup.find_all('a', href=True):
-                    print(link)
+                await self.fetch(url)
                 self.q.task_done()
         except asyncio.CancelledError:
             pass
