@@ -1,9 +1,9 @@
 import asyncio
 import aiohttp
-import socket
 import time
 
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 class Crawl:
     def __init__(self, loop, num_workers):
@@ -14,6 +14,7 @@ class Crawl:
         self.start_time = None
         self.end_time = None
         self.seen = []
+        self.max_redirects = 10
 
         self.q.put_nowait('http://leokhachatorians.com')
         #self.q.put_nowait('http://google.com')
@@ -29,15 +30,19 @@ class Crawl:
             soup = BeautifulSoup(html, 'lxml')
             for link in soup.find_all('a', href=True):
                 href = link.attrs['href']
-                print(href)
-                if href != '/' and href not in self.seen:
+                o = urlparse(href)
+                if o.scheme == '':
                     href = url + link.attrs['href']
+                    if o.path != '/' and o.path not in self.seen:
+                        self.seen.append(o.path)
+                        self.q.put_nowait(href)
+                else:
                     print(href)
-                    self.seen.append(href)
                     self.q.put_nowait(href)
+
             await resp.release()
         except Exception:
-            resp.release()
+            await resp.release()
 
     async def work(self):
         try:
