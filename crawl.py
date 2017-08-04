@@ -14,7 +14,7 @@ class Crawl:
         self.start_time = None
         self.end_time = None
         self.seen = []
-        self.max_redirects = 10
+        self.max_ventures = 10
         self.base_url = 'http://leokhachatorians.com'
         self.parsed_based_url = urlparse(self.base_url)
         self.netloc = self.parsed_based_url.netloc
@@ -44,7 +44,7 @@ class Crawl:
                     self.seen.append(parsed.path)
                     self.q.put_nowait(href)
                     print(href)
-        except Exception:
+        except Exception as e:
             pass
         finally:
             await resp.release()
