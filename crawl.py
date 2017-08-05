@@ -14,7 +14,7 @@ class Crawl:
         self.start_time = None
         self.end_time = None
         self.seen = []
-        self.max_ventures = 10
+        self.max_ventures = 5
         self.base_url = 'http://leokhachatorians.com'
         self.parsed_based_url = urlparse(self.base_url)
         self.netloc = self.parsed_based_url.netloc
@@ -28,22 +28,28 @@ class Crawl:
     async def fetch(self, url):
         resp = await self.client.get(url)
         try:
+            if self.max_ventures <= 0:
+                raise
             resp.status == 200
             html =  await resp.text()
+            self.max_ventures -= 1
+            print(url)
             soup = BeautifulSoup(html, 'lxml')
             for link in soup.find_all('a', href=True):
                 should_i_crawl = True
                 href = link.attrs['href']
                 parsed = urlparse(href)
                 if parsed.scheme == '':
-                    print(urljoin(url, href))
-                    href = 'http://leokhachatorians.com' + href
+                    #print(urljoin(url, href))
+                    #href = 'http://leokhachatorians.com' + href
+                    href = urljoin(url, href)
                     parsed = urlparse(href)
                 if parsed.netloc != self.netloc:
                     pass
                     #should_i_crawl = False
                 if parsed.path not in self.seen and should_i_crawl:
                     self.seen.append(parsed.path)
+                    #print(href)
                     self.q.put_nowait(href)
         except Exception as e:
             pass
