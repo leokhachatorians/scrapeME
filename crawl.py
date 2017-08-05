@@ -15,11 +15,11 @@ class Crawl:
         self.end_time = None
         self.seen = []
         self.max_ventures = 5
-        self.base_url = 'http://leokhachatorians.com'
+        self.base_url = 'http://leokhachatorians.com/'
         self.parsed_based_url = urlparse(self.base_url)
         self.netloc = self.parsed_based_url.netloc
 
-        self.q.put_nowait('http://leokhachatorians.com')
+        self.q.put_nowait('http://leokhachatorians.com/')
         #self.q.put_nowait('http://google.com')
         #self.q.put_nowait('http://amazon.com')
         #self.q.put_nowait('http://yahoo.com')
@@ -32,8 +32,8 @@ class Crawl:
                 raise
             resp.status == 200
             html =  await resp.text()
-            self.max_ventures -= 1
-            print(url)
+            #self.max_ventures -= 1
+            print("*********", url)
             soup = BeautifulSoup(html, 'lxml')
             for link in soup.find_all('a', href=True):
                 should_i_crawl = True
@@ -49,7 +49,7 @@ class Crawl:
                     #should_i_crawl = False
                 if parsed.path not in self.seen and should_i_crawl:
                     self.seen.append(parsed.path)
-                    #print(href)
+                    print("-------- {}".format(href))
                     self.q.put_nowait(href)
         except Exception as e:
             pass
